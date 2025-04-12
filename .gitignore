@@ -4,3 +4,10 @@ messages.db
 .env
 backups/
 *.db
+venv/
+.vscode/
+.idea/
+*.log
+.DS_Store
+.env.local
+.env.*.local
