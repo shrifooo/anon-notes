@@ -1,49 +1,32 @@
 import os
 from datetime import datetime
-import shutil
 from flask import Flask, request, jsonify, render_template
-import sqlite3
+from supabase import create_client
+from dotenv import load_dotenv
+import random
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 
-# Define base directory and database paths
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE_PATH = os.path.join(BASE_DIR, 'messages.db')
-BACKUP_DIR = os.path.join(BASE_DIR, 'backups')
+# Initialize Supabase client
+supabase = create_client(
+    os.getenv('SUPABASE_URL'),
+    os.getenv('SUPABASE_KEY')
+)
 
-def backup_database():
-    """Create a timestamped backup of the database"""
-    os.makedirs(BACKUP_DIR, exist_ok=True)
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    backup_path = os.path.join(BACKUP_DIR, f'messages_{timestamp}.db')
-    
-    # Only backup if the database exists
-    if os.path.exists(DATABASE_PATH):
-        shutil.copy2(DATABASE_PATH, backup_path)
-        return backup_path
-    return None
-
-def get_db():
-    """Get database connection with row factory"""
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-# Database setup
 def init_db():
-    """Initialize the database and create tables if they don't exist"""
-    with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute('''CREATE TABLE IF NOT EXISTS messages (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            content TEXT NOT NULL,
-                            likes INTEGER DEFAULT 0,
-                            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-                          )''')
-        conn.commit()
-    
-    # Create initial backup after initialization
-    backup_database()
+    """Initialize the database if needed"""
+    try:
+        # Check if table exists by attempting to select from it
+        supabase.table('messages').select('*').limit(1).execute()
+    except:
+        # If table doesn't exist, create it
+        supabase.table('messages').insert({
+            'content': 'Welcome to Wholesome Notes! 💌',
+            'likes': 0
+        }).execute()
 
 # Initialize the database
 init_db()
@@ -66,43 +49,65 @@ def submit_message():
     if any(word in content.lower() for word in inappropriate_words):
         return jsonify({'error': 'Inappropriate content detected.'}), 400
 
-    with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute('INSERT INTO messages (content) VALUES (?)', (content,))
-        conn.commit()
-
-    return jsonify({'message': 'Message submitted successfully!'}), 201
+    try:
+        result = supabase.table('messages').insert({
+            'content': content,
+            'likes': 0
+        }).execute()
+        
+        return jsonify({'message': 'Message submitted successfully!'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/like/<int:note_id>', methods=['POST'])
 def like_note(note_id):
-    with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute('UPDATE messages SET likes = likes + 1 WHERE id = ?', (note_id,))
-        conn.commit()
-        cursor.execute('SELECT likes FROM messages WHERE id = ?', (note_id,))
-        result = cursor.fetchone()
-
-    if result:
-        return jsonify({'likes': result[0]}), 200
-    else:
-        return jsonify({'error': 'Note not found.'}), 404
+    try:
+        # First get current likes
+        result = supabase.table('messages').select('likes').eq('id', note_id).execute()
+        if not result.data:
+            return jsonify({'error': 'Note not found.'}), 404
+        
+        current_likes = result.data[0]['likes']
+        
+        # Update likes count
+        result = supabase.table('messages').update({
+            'likes': current_likes + 1
+        }).eq('id', note_id).execute()
+        
+        return jsonify({'likes': result.data[0]['likes']}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/random', methods=['GET'])
 def get_random_message():
-    with get_db() as conn:
-        cursor = conn.cursor()
-        # First try to get a random message that's different from the last one
+    try:
         last_note_id = request.args.get('last_id')
+        
+        # Get all messages
+        result = supabase.table('messages').select('*').execute()
+        messages = result.data
+        
+        if not messages:
+            return jsonify({'message': 'No messages available.'}), 404
+            
+        # Filter out the last note if specified
         if last_note_id:
-            cursor.execute('SELECT id, content, likes FROM messages WHERE id != ? ORDER BY RANDOM() LIMIT 1', (last_note_id,))
-        else:
-            cursor.execute('SELECT id, content, likes FROM messages ORDER BY RANDOM() LIMIT 1')
-        result = cursor.fetchone()
-
-    if result:
-        return jsonify({'id': result[0], 'message': result[1], 'likes': result[2]}), 200
-    else:
-        return jsonify({'message': 'No messages available.'}), 404
+            messages = [m for m in messages if m['id'] != int(last_note_id)]
+            
+        if not messages:
+            # If no other messages available, return any message
+            result = supabase.table('messages').select('*').execute()
+            messages = result.data
+            
+        # Select a random message
+        message = random.choice(messages)
+        return jsonify({
+            'id': message['id'],
+            'message': message['content'],
+            'likes': message['likes']
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/leave-note')
 def leave_note():
