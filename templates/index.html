@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wholesome Anonymous Notes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/framer-motion/dist/framer-motion.umd.js"></script>
+</head>
+<body class="bg-rose-50 min-h-screen flex items-center justify-center">
+    <div class="p-6 space-y-6 max-w-lg w-full bg-white rounded-2xl shadow-sm animate-fade-in">
+        <h1 class="text-2xl font-semibold text-gray-800">Wholesome Anonymous Notes</h1>
+        <div class="space-y-4">
+            <button onclick="location.href='/leave-note'" class="w-full py-3 bg-amber-100 text-amber-700 rounded-xl hover:bg-amber-200 transition duration-300 hover:scale-105">Leave a Note</button>
+            <button onclick="location.href='/receive-note'" class="w-full py-3 bg-amber-100 text-amber-700 rounded-xl hover:bg-amber-200 transition duration-300 hover:scale-105">Receive a Note</button>
+        </div>
+        <footer class="text-center text-sm text-gray-600">
+            <a href="/about" class="underline">About</a>
+            <p>Spreading good vibes ✨</p>
+        </footer>
+    </div>
+    <style>
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.5s ease-in-out;
+        }
+    </style>
+</body>
+</html>

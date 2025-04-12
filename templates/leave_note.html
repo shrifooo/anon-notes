@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave a Note</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/framer-motion/dist/framer-motion.umd.js"></script>
+    <style>
+        @keyframes fade-in-down {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes fade-out {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes fade-in-out {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        .animate-fade-in-down {
+            animation: fade-in-down 0.5s ease-out;
+        }
+        .animate-fade-out {
+            animation: fade-out 0.5s ease-out;
+        }
+        .animate-fade-in {
+            animation: fade-in 0.5s ease-in-out;
+        }
+        .success-message {
+            display: none;
+            margin-top: 10px;
+            font-size: 1rem;
+            color: #6B6B6B;
+            text-align: center;
+            animation: fade-in-out 3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-rose-50 min-h-screen flex items-center justify-center animate-fade-in">
+    <div class="p-6 space-y-6 max-w-lg w-full bg-white rounded-2xl shadow-sm">
+        <h1 class="text-2xl font-semibold text-gray-800">Leave a Note</h1>
+        <form id="leaveNoteForm" class="space-y-4">
+            <textarea id="noteContent" class="w-full p-4 rounded-lg bg-yellow-50 border border-yellow-200 shadow-md font-serif text-gray-800 placeholder-[#f497b5] focus:ring-2 focus:ring-rose-200" placeholder="Write something kind..." maxlength="100"></textarea>
+            <div class="text-sm text-gray-600" id="charCounter">0/100 characters</div>
+            <button type="submit" id="submitButton" class="w-full py-3 bg-amber-100 text-brown-800 font-semibold rounded-lg shadow hover:bg-amber-200 transition-all duration-300 ease-in-out">Send this note 💌</button>
+        </form>
+        <button onclick="location.href='/'" class="w-full py-3 bg-amber-100 text-brown-800 font-semibold rounded-lg shadow hover:bg-amber-200 transition-all duration-300 ease-in-out">Back to Home</button>
+        <p id="successMessage" class="success-message">Your note is now floating in the kindness universe 🌟</p>
+    </div>
+    <script>
+        const noteContent = document.getElementById('noteContent');
+        const charCounter = document.getElementById('charCounter');
+
+        noteContent.addEventListener('input', () => {
+            charCounter.textContent = `${noteContent.value.length}/100 characters`;
+        });
+
+        document.getElementById('leaveNoteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = noteContent.value;
+            const submitButton = document.getElementById('submitButton');
+            const successMessage = document.getElementById('successMessage');
+
+            submitButton.textContent = 'Sending...';
+            submitButton.disabled = true;
+
+            const response = await fetch('/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ content })
+            });
+
+            if (response.ok) {
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+                noteContent.value = '';
+                charCounter.textContent = '0/100 characters';
+            }
+
+            submitButton.textContent = 'Send this note 💌';
+            submitButton.disabled = false;
+        });
+    </script>
+</body>
+</html>

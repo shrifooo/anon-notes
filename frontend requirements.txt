@@ -1,0 +1,52 @@
+Vibe Brief: “Comforting & Gentle”
+
+Mood: warm, inviting, serene
+Visual Style Keywords: soft pastels, minimalism, calm animations, rounded corners, large breathable spacing, cozy typography
+🎨 Color Palette Suggestions:
+
+    Background: #FAF3E0 (Cream), #FFF7F0 (Ivory), or #F6F6F6 (Light gray)
+
+    Accent: #DDBDD5 (Mauve), #B5EAD7 (Mint), #C7CEEA (Lavender)
+
+    Text: #3A3A3A (Soft dark gray), #6B6B6B (Secondary text)
+
+📐 UI Elements
+Element	Style/Notes
+Buttons	Rounded (border-radius: 1.5rem), pastel fill, soft hover
+Fonts	Nunito, Quicksand, or Comfortaa from Google Fonts
+Layout	Vertical flow, minimal distractions, lots of spacing
+Animations	Subtle fade-ins, micro hover effects
+🧰 2. Suggested Frontend Frameworks
+Goal	Framework
+Quick prototyping	Tailwind CSS + HTML
+Component library	ShadCN/UI (based on Radix UI + Tailwind)
+Full frontend flexibility	React.js
+Design-to-code feel	Next.js (if you go advanced later)
+Minimal UI-only approach	Streamlit (if keeping everything in Python)
+
+💡 If you're using Flask for backend, you can pair them with:
+
+    Tailwind CSS + basic HTML templates
+
+    or plug in React frontend via a separate project folder (slightly more setup, but worth it)
+
+📋 3. Requirements for Frontend UI
+
+Here's how you'd describe your frontend expectations clearly to the AI or another dev:
+💌 Home Page — “Leave or Receive a Note”
+Section	Description
+Header	App name in a cute font + gentle background gradient
+CTA Buttons	Two pastel buttons: “Leave a note” and “Receive a note”
+Illustration	Soft animated SVG or Lottie animation — like a floating envelope or heart
+Footer	Link to “About” page + small tagline like “Spreading good vibes ✨”
+✍️ Leave a Note Page
+Element	Description
+Textarea	Big rounded corner input box with placeholder “Write something kind…”
+Mood selector	Optional dropdown or emoji to tag mood of the note (e.g., 💖, 🌈, 🌻)
+Submit Button	Cute, animated on hover — pastel color, says “Send this note 💌”
+Success message	“Your note is now floating in the kindness universe 🌟”
+📬 Receive a Note Page
+Element	Description
+Card	Centered soft-glow card with a single anonymous note
+Refresh button	“Give me another note 🔄” — soft bounce on click
+Background	Maybe an animated sky with drifting clouds or stars

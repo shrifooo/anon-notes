@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receive a Note</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/framer-motion/dist/framer-motion.umd.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.5s ease-in-out;
+        }
+
+        .note-card {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .note-content {
+            font-size: 1.25rem;
+            line-height: 1.75;
+            color: #1f2937;
+            margin: 10px 0 20px;
+            text-align: center;
+        }
+
+        .note-footer {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-style: italic;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        .interaction-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-top: auto;
+            width: 100%;
+        }
+
+        .like-button {
+            background: #fef3c7;
+            color: #b45309;
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .like-button:hover {
+            background: #fde68a;
+        }
+
+        .like-button.liked {
+            background: #e5e7eb;
+            cursor: not-allowed;
+        }
+
+        .like-message {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .button-container button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #fef3c7;
+            color: #b45309;
+            font-weight: 600;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .button-container button:hover {
+            background: #fde68a;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-rose-50 min-h-screen flex flex-col items-center justify-center space-y-6 animate-fade-in">
+    <div class="note-card" id="note-card">
+        <p id="note-content" class="note-content">Loading...</p>
+        <div class="interaction-container">
+            <button id="like-button" class="like-button">Like 💖</button>
+            <p id="like-count">Likes: 0</p>
+            <p id="like-message" class="like-message"></p>
+        </div>
+        <p class="note-footer">"A kind word is never wasted."</p>
+    </div>
+    <div class="button-container w-full max-w-sm space-y-4">
+        <button onclick="fetchNote()" class="w-full py-3">Give me another note 🔄</button>
+        <button onclick="location.href='/'" class="w-full py-3">Back to Home</button>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let currentNoteId = null;
+
+            async function fetchNote() {
+                try {
+                    const url = currentNoteId ? `/random?last_id=${currentNoteId}` : '/random';
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        currentNoteId = data.id;
+                        const noteContent = document.getElementById('note-content');
+                        noteContent.textContent = data.message;
+                        noteContent.classList.add('animate-fade-in');
+                        setTimeout(() => noteContent.classList.remove('animate-fade-in'), 500);
+
+                        document.getElementById('like-count').textContent = `Likes: ${data.likes}`;
+                        const likeButton = document.getElementById('like-button');
+                        const likeMessage = document.getElementById('like-message');
+
+                        if (localStorage.getItem(`liked-${currentNoteId}`)) {
+                            likeButton.classList.add('liked');
+                            likeButton.disabled = true;
+                            likeMessage.textContent = "💖 You liked this note.";
+                        } else {
+                            likeButton.classList.remove('liked');
+                            likeButton.disabled = false;
+                            likeMessage.textContent = "";
+                        }
+                    } else {
+                        document.getElementById('note-content').textContent = "Failed to load note.";
+                    }
+                } catch (error) {
+                    document.getElementById('note-content').textContent = "An error occurred while fetching the note.";
+                }
+            }
+
+            async function likeNote() {
+                if (!currentNoteId) return;
+
+                try {
+                    const response = await fetch(`/like/${currentNoteId}`, { method: 'POST' });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        document.getElementById('like-count').textContent = `Likes: ${data.likes}`;
+                        localStorage.setItem(`liked-${currentNoteId}`, true);
+                        const likeButton = document.getElementById('like-button');
+                        likeButton.classList.add('liked');
+                        likeButton.disabled = true;
+                        document.getElementById('like-message').textContent = "💖 You liked this note.";
+                    }
+                } catch (error) {
+                    console.error("Error liking the note:", error);
+                }
+            }
+
+            document.getElementById('like-button').addEventListener('click', likeNote);
+            window.fetchNote = fetchNote; // Expose fetchNote globally for the button
+
+            // Fetch the first note on page load
+            fetchNote();
+        });
+    </script>
+</body>
+</html>
